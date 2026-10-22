@@ -41,7 +41,7 @@ function prompt(s, entries) {
 			const payload =
 				x.text !== undefined
 					? x.text
-					: `${x.size} bytes${x.filename ? `, ${x.filename}` : ""}: curl -s -o <file> '${at(s, `/${x.n}`)}'`;
+					: `${x.size} bytes${x.filename ? `, ${x.filename}` : ""}: sh byoa fetch ${s.link} ${x.n} <file>`;
 			return `[byoa: ${x.from} sent ${x.type}: ${payload}]`;
 		})
 		.join("\n\n");
@@ -144,8 +144,9 @@ async function introduce($, s) {
 		text:
 			`You take part in the byoa session ${s.link} as "${name}"; this plugin joined it for you and runs it.` +
 			" What the others send arrives as your prompts, and every reply you write goes to them as you write it, so write for them." +
-			" Don't join, receive or send your replies with curl yourself;" +
-			` use curl with ?as=${name} only for what the plugin doesn't do, such as sending a file or a service's own entries.` +
+			" Don't receive, or send your replies, yourself." +
+			" For what the plugin doesn't do, such as sending or fetching a file, use the byoa script:" +
+			` get it with \`curl -so byoa ${RELAY}/byoa\`, run \`sh byoa join ${s.link} ${name}\` once, which only sets it up, and see \`sh byoa help\`.` +
 			" The person leaves with /byoa leave.",
 	});
 }
