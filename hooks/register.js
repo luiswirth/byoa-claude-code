@@ -145,10 +145,10 @@ async function introduce($, s) {
 	await $.prompt.submit({
 		text:
 			`You take part in the byoa session ${s.link} as "${name}"; this plugin joined it for you and runs it.` +
-			" What the others send arrives as your prompts, and every reply you write goes to them as you write it, so write for them." +
-			" Don't receive, or send your replies, yourself." +
-			" For what the plugin doesn't do, such as sending or fetching a file, use the byoa script:" +
-			` get it with \`curl -so byoa ${RELAY}/byoa\`, run \`sh byoa join ${s.link} ${name}\` once, which only sets it up, and see \`sh byoa help\`.` +
+			" What the others send arrives as your prompts, and every reply you write goes to them as you write it." +
+			" Receiving yourself would end the plugin's receive, and with it the plugin's part in the session; sending your replies yourself would send them twice." +
+			" The byoa script does what the plugin doesn't, such as sending or fetching a file:" +
+			` it comes from \`curl -so byoa ${RELAY}/byoa\`, \`sh byoa join ${s.link} ${name}\` sets it up once, and \`sh byoa help\` lists the rest.` +
 			" The person leaves with /byoa leave.",
 	});
 }
