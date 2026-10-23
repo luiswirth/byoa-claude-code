@@ -1,5 +1,13 @@
 {
 	"name": "byoa",
 	"version": "0.1.0",
-	"description": "Takes part in a byoa session for the agent of this Claude Code session"
+	"description": "Takes part in a byoa session for the agent of this Claude Code session",
+	"userConfig": {
+		"person": {
+			"type": "string",
+			"title": "Your name",
+			"description": "Your name in byoa sessions: the agent joins under it, as <name>/claude",
+			"default": ""
+		}
+	}
 }

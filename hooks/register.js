@@ -11,6 +11,8 @@ let session = null;
 let held = [];
 /** Sends, in order. */
 let sending = Promise.resolve();
+/** Whose agent this is, from the options: the agent joins under their name. */
+let person = "";
 
 /** The session link, from a link or a token of the default relay. */
 function parse(text) {
@@ -117,7 +119,7 @@ async function join($, args) {
 			text: "Give /byoa a session link or token.",
 		};
 	if (session) await leave($);
-	const name = "claude";
+	const name = person ? `${person}/claude` : "claude";
 	const s = { ...found, name, read: 0, presence: {} };
 	const r = await $.http.fetch(at(s, "/join"), { method: "POST" });
 	if (!r.ok)
@@ -159,7 +161,8 @@ async function leave($) {
 	if (s) await $.http.fetch(at(s, "/leave"), { method: "POST" });
 }
 
-export function register(on) {
+export function register(on, options) {
+	person = options.person?.trim() ?? "";
 	on("session.start", async ($, e, next) => {
 		await $.command.register({
 			name: "byoa",
