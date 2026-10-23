@@ -21,8 +21,8 @@ function parse(text) {
 	return null;
 }
 
-const at = (s, path = "", query = "") =>
-	`${s.link}${path}?as=${encodeURIComponent(s.name)}${query}`;
+/** A request on the agent's own link, which joining gave it. */
+const at = (s, path = "", query = "") => `${s.me}${path}${query}`;
 
 const isText = (x) => x.type.startsWith("text/");
 
@@ -53,7 +53,7 @@ async function receive($, s) {
 	if (session !== s) return;
 	let r;
 	try {
-		r = await $.http.fetch(at(s, "", `&after=${s.read}&wait=${WAIT}`));
+		r = await $.http.fetch(at(s, "", `?after=${s.read}&wait=${WAIT}`));
 	} catch {
 		$.clock.after(5000, () => receive($, s));
 		return;
@@ -120,16 +120,32 @@ async function join($, args) {
 		};
 	if (session) await leave($);
 	const name = person ? `${person}/claude` : "claude";
-	const s = { ...found, name, read: 0, presence: {} };
-	const r = await $.http.fetch(at(s, "/join"), { method: "POST" });
-	if (!r.ok)
-		return { text: `Could not join ${s.link}: ${r.status} ${r.text.trim()}` };
-	// Joining again goes on from where this name had read.
-	const now = await $.http.fetch(at(s, "", "&wait=0"));
-	const presence = JSON.parse(
-		now.text.trim().split("\n").at(-1) || "{}",
-	).presence;
-	s.read = presence?.[name]?.read ?? 0;
+	// The own link of the last session joined, kept across Claude Code's
+	// sessions: the name is taken for anyone else, so joining it again needs it.
+	const last = await $.store.get("joined");
+	const again = last?.link === found.link && last?.name === name;
+	const r = await $.http.fetch(
+		again
+			? `${last.me}/join`
+			: `${found.link}/join?as=${encodeURIComponent(name)}`,
+		{ method: "POST" },
+	);
+	if (!r.ok) {
+		const why =
+			r.status === 409
+				? `${name} is taken in this session: someone else joined under it`
+				: `${r.status} ${r.text.trim()}`;
+		return { text: `Could not join ${found.link}: ${why}` };
+	}
+	const joined = JSON.parse(r.text);
+	const s = {
+		...found,
+		name,
+		me: joined.link,
+		read: joined.read,
+		presence: {},
+	};
+	await $.store.set("joined", { link: s.link, name, me: s.me });
 	session = s;
 	held = [];
 	$.clock.after(0, () => receive($, s));
@@ -148,7 +164,8 @@ async function introduce($, s) {
 			" What the others send arrives as your prompts, and every reply you write goes to them as you write it." +
 			" Receiving yourself would end the plugin's receive, and with it the plugin's part in the session; sending your replies yourself would send them twice." +
 			" The byoa script does what the plugin doesn't, such as sending or fetching a file:" +
-			` it comes from \`curl -so byoa ${RELAY}/byoa\`, \`sh byoa join ${s.link} ${name}\` sets it up once, and \`sh byoa help\` lists the rest.` +
+			` it comes from \`curl -so byoa ${RELAY}/byoa\`, \`sh byoa join ${s.me}\` sets it up once as you, and \`sh byoa help\` lists the rest.` +
+			" That link is yours alone: whoever holds it speaks as you." +
 			" The person leaves with /byoa leave.",
 	});
 }
