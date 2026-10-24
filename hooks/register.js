@@ -17,7 +17,7 @@ let person = "";
 /** The session link, from a link or a token of the default relay. */
 function parse(text) {
 	if (/^https?:\/\/\S+\/s\/[\w-]+$/.test(text)) return { link: text };
-	if (/^[\w-]+$/.test(text)) return { link: `${RELAY}/s/${text}` };
+	if (/^[\w-]+$/.test(text)) return { link: `${RELAY}/v1/s/${text}` };
 	return null;
 }
 
