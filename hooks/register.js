@@ -49,13 +49,22 @@ function prompt(s, entries) {
 		.join("\n\n");
 }
 
+/** Receives again after a pause that grows while the relay can't answer, up
+ * to a minute, so that a relay that fails gets few requests. */
+function retry($, s) {
+	s.failures = (s.failures ?? 0) + 1;
+	$.clock.after(Math.min(5000 * 2 ** (s.failures - 1), 60_000), () =>
+		receive($, s),
+	);
+}
+
 async function receive($, s) {
 	if (session !== s) return;
 	let r;
 	try {
 		r = await $.http.fetch(at(s, "", `?after=${s.read}&wait=${WAIT}`));
 	} catch {
-		$.clock.after(5000, () => receive($, s));
+		retry($, s);
 		return;
 	}
 	if (session !== s) return;
@@ -67,7 +76,7 @@ async function receive($, s) {
 			$.ui.invalidate("ui.render");
 			return;
 		}
-		$.clock.after(5000, () => receive($, s));
+		retry($, s);
 		return;
 	}
 	const lines = r.text
@@ -76,6 +85,7 @@ async function receive($, s) {
 		.map((l) => JSON.parse(l));
 	s.presence = lines.pop()?.presence ?? s.presence;
 	$.ui.invalidate("ui.render");
+	s.failures = 0;
 	const entries = lines.filter((x) => x.n > s.read);
 	if (entries.length > 0) {
 		s.read = entries.at(-1).n;
