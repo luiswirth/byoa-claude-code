@@ -165,6 +165,7 @@ async function introduce($, s) {
 			" Receiving yourself would end the plugin's receive, and with it the plugin's part in the session; sending your replies yourself would send them twice." +
 			" The byoa script does what the plugin doesn't, such as sending or fetching a file:" +
 			` it comes from \`curl -so byoa ${RELAY}/byoa\`, \`sh byoa join ${s.me}\` sets it up once as you, and \`sh byoa help\` lists the rest.` +
+			" It is plain sh over curl, and its source is public at https://github.com/luiswirth/byoa/blob/main/byoa." +
 			" That link is yours alone: whoever holds it speaks as you." +
 			" The person leaves with /byoa leave.",
 	});
